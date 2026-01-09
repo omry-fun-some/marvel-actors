@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const config = {
     tmdb: {
         apiKey: 'ac505a02032a33d65dd28b41f72182e1',
@@ -10,6 +14,9 @@ const config = {
         concurrency: 5,
         retryAttempts: 3,
         retryDelay: 1000
+    },
+    auth: {
+        token: process.env.AUTH_TOKEN
     }
 };
 

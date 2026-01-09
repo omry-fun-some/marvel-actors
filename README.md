@@ -27,6 +27,13 @@ cd backend_assignment_skeleton
 npm install
 ```
 
+3. Create a `.env` file in the root directory:
+```bash
+AUTH_TOKEN=123456
+```
+
+Or copy from the existing `.env` file. The `AUTH_TOKEN` is required for API authentication.
+
 ## Running the Server
 
 Start the server:
@@ -36,11 +43,28 @@ npm start
 
 The server will start on port 3000. On startup, it fetches credits for all Marvel movies from TMDB and builds lookup maps. This may take a few seconds.
 
+## Authentication
+
+All API endpoints except `/health` require authentication using a Bearer token.
+
+**Authentication Header:**
+```
+Authorization: Bearer <AUTH_TOKEN>
+```
+
+The token must match the `AUTH_TOKEN` value set in your `.env` file.
+
+**Error Responses:**
+- `401 Unauthorized`: No token provided
+- `403 Forbidden`: Invalid token
+
 ## API Endpoints
 
 ### GET /moviesPerActor
 
 Returns all Marvel movies each tracked actor has appeared in.
+
+**Authentication:** Required
 
 **Response:**
 ```json
@@ -53,6 +77,8 @@ Returns all Marvel movies each tracked actor has appeared in.
 ### GET /actorsWithMultipleCharacters
 
 Returns actors who have played more than one character across Marvel movies.
+
+**Authentication:** Required
 
 **Response:**
 ```json
@@ -68,6 +94,8 @@ Returns actors who have played more than one character across Marvel movies.
 
 Returns characters that have been played by more than one actor.
 
+**Authentication:** Required
+
 **Response:**
 ```json
 {
@@ -82,6 +110,8 @@ Returns characters that have been played by more than one actor.
 
 Health check endpoint.
 
+**Authentication:** Not required
+
 **Response:**
 ```json
 {
@@ -94,28 +124,36 @@ Health check endpoint.
 Query all endpoints with these curl commands:
 
 ```bash
-# Health check
+# Health check (no authentication required)
 curl http://localhost:3000/health
 
-# Get all movies per actor
-curl http://localhost:3000/moviesPerActor
+# Get all movies per actor (requires authentication)
+curl -H "Authorization: Bearer 123456" http://localhost:3000/moviesPerActor
 
-# Get actors who played multiple characters
-curl http://localhost:3000/actorsWithMultipleCharacters
+# Get actors who played multiple characters (requires authentication)
+curl -H "Authorization: Bearer 123456" http://localhost:3000/actorsWithMultipleCharacters
 
-# Get characters played by multiple actors
-curl http://localhost:3000/charactersWithMultipleActors
+# Get characters played by multiple actors (requires authentication)
+curl -H "Authorization: Bearer 123456" http://localhost:3000/charactersWithMultipleActors
 
 # Pretty print JSON output (requires jq)
-curl -s http://localhost:3000/moviesPerActor | jq .
-curl -s http://localhost:3000/actorsWithMultipleCharacters | jq .
-curl -s http://localhost:3000/charactersWithMultipleActors | jq .
+curl -s -H "Authorization: Bearer 123456" http://localhost:3000/moviesPerActor | jq .
+curl -s -H "Authorization: Bearer 123456" http://localhost:3000/actorsWithMultipleCharacters | jq .
+curl -s -H "Authorization: Bearer 123456" http://localhost:3000/charactersWithMultipleActors | jq .
 
 # Save response to file
-curl -o movies.json http://localhost:3000/moviesPerActor
+curl -H "Authorization: Bearer 123456" -o movies.json http://localhost:3000/moviesPerActor
 
 # With verbose output
-curl -v http://localhost:3000/health
+curl -v -H "Authorization: Bearer 123456" http://localhost:3000/moviesPerActor
+
+# Test authentication error (no token)
+curl http://localhost:3000/moviesPerActor
+# Response: {"error": "Authentication token required"}
+
+# Test authentication error (invalid token)
+curl -H "Authorization: Bearer wrong-token" http://localhost:3000/moviesPerActor
+# Response: {"error": "Invalid authentication token"}
 ```
 
 ## Running Tests
@@ -129,11 +167,15 @@ npm test
 
 ```
 backend_assignment_skeleton/
+├── .env                     # Environment variables (AUTH_TOKEN)
+├── .gitignore               # Git ignore rules
 ├── index.js                 # Application entry point
 ├── package.json             # Project dependencies
 ├── dataForQuestions.js      # Marvel movies and actors data
 ├── config/
-│   └── config.js            # TMDB API configuration
+│   └── config.js            # TMDB API and environment configuration
+├── middleware/
+│   └── auth.js              # Authentication middleware
 ├── services/
 │   └── tmdbService.js       # TMDB API integration with caching
 ├── controllers/
@@ -151,6 +193,8 @@ backend_assignment_skeleton/
 - **HTTP Client**: Axios
 - **Testing**: Jest
 - **Module System**: ES Modules
+- **Authentication**: Bearer token authentication
+- **Environment Variables**: dotenv
 
 ### Caching Strategy
 

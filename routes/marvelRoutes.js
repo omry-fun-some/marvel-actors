@@ -5,6 +5,7 @@ import {
     getCharactersWithMultipleActors,
     isReady
 } from '../controllers/marvelController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ function checkReady(req, res, next) {
     next();
 }
 
+router.use(authenticateToken);
 router.use(checkReady);
 
 router.get('/moviesPerActor', (req, res) => {
